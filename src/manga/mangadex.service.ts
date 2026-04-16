@@ -20,4 +20,9 @@ export class MangaDexService {
     const res = await fetch(`${this.BASE}/at-home/server/${chapterId}`);
     return await res.json();
   }
+  
+  async proxyImage(url: string) {
+        const res = await fetch(url);
+        return res;
+    }
 }
