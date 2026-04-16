@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  reader
+  publisher
+  admin
+}
+
+enum RequestStatus {
+  pending
+  approved
+  rejected
+}
+
+model User {
+  id              Int               @id @default(autoincrement())
+  name            String
+  email           String            @unique
+  password        String
+  role            Role              @default(reader)
+  avatar          String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  comics          Comic[]           @relation("PublishedComics")
+  favorites       Favorite[]
+  comments        Comment[]
+  ratings         Rating[]
+  publishRequests PublishRequest[]
+  shares          Share[]
+}
+
+model PublishRequest {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  message   String?       @db.Text
+  status    RequestStatus @default(pending)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Genre {
+  id        Int          @id @default(autoincrement())
+  name      String       @unique
+  slug      String       @unique
+  createdAt DateTime     @default(now())
+
+  comics    ComicGenre[]
+}
+
+model Comic {
+  id            Int          @id @default(autoincrement())
+  title         String
+  author        String
+  slug          String       @unique
+  description   String       @db.Text
+  coverImage    String?
+  publisherId   Int
+  status        ComicStatus  @default(ongoing)
+  viewCount     Int          @default(0)
+  shareCount    Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  publisher     User         @relation("PublishedComics", fields: [publisherId], references: [id], onDelete: Cascade)
+  genres        ComicGenre[]
+  chapters      Chapter[]
+  favorites     Favorite[]
+  comments      Comment[]
+  ratings       Rating[]
+  shares        Share[]
+}
+
+enum ComicStatus {
+  ongoing
+  completed
+  hiatus
+}
+
+model ComicGenre {
+  comicId   Int
+  genreId   Int
+  comic     Comic   @relation(fields: [comicId], references: [id], onDelete: Cascade)
+  genre     Genre   @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([comicId, genreId])
+}
+
+model Chapter {
+  id          Int       @id @default(autoincrement())
+  comicId     Int
+  title       String
+  chapterNum  Float
+  pages       Page[]
+  createdAt   DateTime  @default(now())
+
+  comic       Comic     @relation(fields: [comicId], references: [id], onDelete: Cascade)
+}
+
+model Page {
+  id        Int     @id @default(autoincrement())
+  chapterId Int
+  pageNum   Int
+  imageUrl  String
+
+  chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  userId    Int
+  comicId   Int
+  createdAt DateTime @default(now())
+
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comic     Comic  @relation(fields: [comicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, comicId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  comicId   Int
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comic     Comic    @relation(fields: [comicId], references: [id], onDelete: Cascade)
+}
+
+model Rating {
+  userId    Int
+  comicId   Int
+  score     Int
+  createdAt DateTime @default(now())
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comic     Comic @relation(fields: [comicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, comicId])
+}
+
+model Share {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  comicId   Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comic     Comic    @relation(fields: [comicId], references: [id], onDelete: Cascade)
+}
+
+model Carousel {
+  id          Int      @id @default(autoincrement())
+  title       String   
+  description String?
+  imageUrl    String
+  linkUrl     String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
