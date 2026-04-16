@@ -13,7 +13,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ComicsModule } from './comics/comics.module';
-import { MangaDexController } from './manga/mangadex.controller';
+import { MangaDexModule } from './manga/mangadex.module';
 import { GenresModule } from './genres/genres.module';
 import { CarouselModule } from './carousel/carousel.module';
 import { CommentsModule } from './comments/comments.module';
@@ -28,7 +28,7 @@ import { PublishRequestsModule } from './publish-requests/publish-requests.modul
     AuthModule,
     UsersModule,
     ComicsModule,
-    MangaDexController,
+    MangaDexModule,
     GenresModule,
     CarouselModule,
     CommentsModule,
