@@ -20,15 +20,28 @@ export class MangaDexController {
   async getServer(@Param('chapterId') id: string) {
     return this.mangaDexService.getServer(id);
   }
+
   @Get('image')
   async proxyImage(@Query('url') url: string, @Res() res: Response) {
-    const response = await fetch(decodeURIComponent(url));
-    const buffer = await response.arrayBuffer();
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-    res.set('Content-Type', contentType);
-    res.set('Cache-Control', 'public, max-age=86400'); // cache for 1 day
-    res.send(Buffer.from(buffer));
+    try {
+      const decoded = decodeURIComponent(url);
+      const response = await fetch(decoded);
+      
+      if (!response.ok) {
+        res.status(response.status).json({ error: `Upstream error: ${response.status}` });
+        return;
+      }
+
+      const buffer = await response.arrayBuffer();
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      res.set('Content-Type', contentType);
+      res.set('Cache-Control', 'public, max-age=86400');
+      res.send(Buffer.from(buffer));
+    } catch (err) {
+      res.status(500).json({ error: 'Image proxy failed', detail: String(err) });
+    }
   }
+
   @Get('pages/:chapterId')
   async getPages(@Param('chapterId') id: string) {
     return this.mangaDexService.getPages(id);
