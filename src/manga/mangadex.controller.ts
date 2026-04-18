@@ -21,11 +21,16 @@ export class MangaDexController {
     return this.mangaDexService.getServer(id);
   }
   @Get('image')
-    async proxyImage(@Query('url') url: string, @Res() res: Response) {
-        const response = await fetch(url);
-        const buffer = await response.arrayBuffer();
-        const contentType = response.headers.get('content-type') || 'image/jpeg';
-        res.set('Content-Type', contentType);
-        res.send(Buffer.from(buffer));
-    }
+  async proxyImage(@Query('url') url: string, @Res() res: Response) {
+    const response = await fetch(decodeURIComponent(url));
+    const buffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    res.set('Content-Type', contentType);
+    res.set('Cache-Control', 'public, max-age=86400'); // cache for 1 day
+    res.send(Buffer.from(buffer));
+  }
+  @Get('pages/:chapterId')
+  async getPages(@Param('chapterId') id: string) {
+    return this.mangaDexService.getPages(id);
+  }
 }

@@ -25,4 +25,18 @@ export class MangaDexService {
         const res = await fetch(url);
         return res;
     }
+
+  async getPages(chapterId: string): Promise<{ pageNum: number; imageUrl: string }[]> {
+    const res = await fetch(`${this.BASE}/at-home/server/${chapterId}`);
+    const json = await res.json();
+
+    const baseUrl: string = json.baseUrl;
+    const hash: string = json.chapter.hash;
+    const filenames: string[] = json.chapter.data;
+
+    return filenames.map((filename, i) => ({
+      pageNum: i + 1,
+      imageUrl: `${baseUrl}/data/${hash}/${filename}`,
+    }));
+  }
 }
