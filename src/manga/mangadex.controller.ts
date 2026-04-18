@@ -25,8 +25,13 @@ export class MangaDexController {
   async proxyImage(@Query('url') url: string, @Res() res: Response) {
     try {
       const decoded = decodeURIComponent(url);
-      const response = await fetch(decoded);
       
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+      const response = await fetch(decoded, { signal: controller.signal });
+      clearTimeout(timeout);
+
       if (!response.ok) {
         res.status(response.status).json({ error: `Upstream error: ${response.status}` });
         return;
@@ -37,8 +42,12 @@ export class MangaDexController {
       res.set('Content-Type', contentType);
       res.set('Cache-Control', 'public, max-age=86400');
       res.send(Buffer.from(buffer));
-    } catch (err) {
-      res.status(500).json({ error: 'Image proxy failed', detail: String(err) });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        res.status(504).json({ error: 'Image fetch timed out' });
+      } else {
+        res.status(500).json({ error: 'Image proxy failed', detail: String(err) });
+      }
     }
   }
 
